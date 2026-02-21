@@ -13,7 +13,7 @@ USER_HOME=$(eval echo ~${SUDO_USER})
 echo "$USER_HOME"
 
 echo "Copying script to $SCRIPT_PATH"
-cp memento-mori.py "$SCRIPT_PATH"
+cp mementomori.py "$SCRIPT_PATH"
 echo "Applying permissions"
 chmod 755 "$SCRIPT_PATH"
 
