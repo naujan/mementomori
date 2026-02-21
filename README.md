@@ -39,8 +39,8 @@ The outputted mode can also be altered using the `-m <mode>` argument.
 
 #### Manual download:
 ```bash
-git clone https://github.com/naujan/memento-mori.git
-cd memento-mori
+git clone https://github.com/naujan/mementomori.git
+cd mementomori
 chmod +x install.sh
 sudo ./install.sh
 ```
