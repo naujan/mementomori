@@ -245,8 +245,6 @@ Before you can see your fate, let me ask you some questions...
             )
             if birthdate is not None:
                 break
-        
-        print(birthdate)
     
         sex = userask("What is you gender? (Male/Female)",str,["Male", "Female"]).lower()
         
