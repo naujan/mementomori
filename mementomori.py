@@ -11,9 +11,11 @@ import time
 
 from dateutil.relativedelta import *
 from dateutil.parser import *
+from rich.console import Console
 import yaml
 
 
+console = Console()
 
 def parseargs():
     parser = argparse.ArgumentParser(
@@ -47,7 +49,7 @@ def defaultconfig(conffile: Path):
             config.write(f)
 
     except OSError as e:
-        print(f"Error: Error while creating the config: {e}")
+        console.print(f"Error: Error while creating the config: {e}", style="red")
         sys.exit(1)
 
 def gendatafile(datafile: Path, exp): 
@@ -58,12 +60,12 @@ def gendatafile(datafile: Path, exp):
         }
         with datafile.open("w") as f:
             f.write("""# memento mori user data
-# You can modify it as you want 
+# You should not modify this file.
 \n""")
             yaml.dump(user_data, f)
             
     except OSError as e:
-        print(f"Error: Error while creating the date file: {e}")
+        console.print(f"Error: Error while creating the date file: {e}",style="red")
         sys.exit(1)
 
 def load_user_data(datafile: Path):
@@ -78,14 +80,14 @@ def load_user_data(datafile: Path):
 def userask(prompt, anwser_type=str, choices=None, default=None):
     try:
         default_suffix = f"[default={default}]" if default is not None else ""
-        user_input  = anwser_type(input(f"{prompt} : ").strip())
+        user_input  = anwser_type(input(f"{prompt} {default_suffix}: ").strip())
 
         if not user_input and default is not None:
             user_input = str(default)
 
         if choices:
             if user_input.lower() not in [c.lower() for c in choices]:
-                print(f"Invalid choice. Avaiable: {','.join(choices)}")
+                console.print(f"Error: Invalid choice. Avaiable: {','.join(choices)}", style="red")
 
             
         return user_input
@@ -143,7 +145,8 @@ def translate_date(date):
     try: 
         return datetime.strptime(date, "%d-%m-%Y").date() 
     except ValueError: 
-        print("Invalid date format. Please use (DD-MM-YYYY)")
+        console.print("Error: Invalid date format. Please use (DD-MM-YYYY)", style="red")
+        return None
 
 def run_timer(date):
     print("\033[2J\033[H", end="")
@@ -163,8 +166,7 @@ def run_timer(date):
             timer = f"{hours:02}:{minutes:02}:{seconds:02}"
             
             col, row = shutil.get_terminal_size()
-            hpad = (col - len(timer)) // 2
-            vpad = row // 2
+            vpad = (row // 2) - 1
 
             print("\033[2J\033[H", end="")
             
@@ -196,8 +198,7 @@ def run_timer_extened(date):
  {diff.days} days, {diff.hours} hours, {diff.minutes} minutes and {diff.seconds} seconds left."
             
             col, row = shutil.get_terminal_size()
-            hpad = (col - len(timer)) // 2
-            vpad = row // 2
+            vpad = (row // 2) - 1
 
             print("\033[2J\033[H", end="")
             
@@ -216,16 +217,16 @@ def run_timer_extened(date):
 def main():
     cli_args = parseargs()
     
-    conffile = Path("~/.config/memento-mori/config.conf").expanduser()
-    datafile = Path("~/.config/memento-mori/data.yaml").expanduser()
+    conffile = Path("~/.config/mementomori/config.conf").expanduser()
+    datafile = Path("~/.config/mementomori/data.yaml").expanduser()
 
     if not conffile.exists():
-        print("Could not find the config file:", conffile)
+        console.print(f"Could not find the config file: {conffile}", style="red")
 
         if userask_yn("Do you want to generate the default config? (Y/n)", default="y"):
             print("Generating the config file")
             defaultconfig(conffile)
-            print("No errors while generating")
+            console.print("No errors while generating", style="green")
 
         else:
             sys.exit(1)
@@ -248,7 +249,7 @@ Before you can see your fate, let me ask you some questions...
     
         sex = userask("What is you gender? (Male/Female)",str,["Male", "Female"]).lower()
         
-        smoking = userask_yn("Are you smoking? (y/N)","n")
+        smoking = userask_yn("Are you smoking?","n")
 
         drinking = userask("What is your drinking efficiency? (0-10)",int)
 
@@ -263,12 +264,16 @@ Before you can see your fate, let me ask you some questions...
 
     config = configparser.ConfigParser()
     config.read(conffile)
-
     user_data = load_user_data(datafile)
+
+    if not isinstance(user_data.get("expected_date"), date):
+        console.print(f"Error: Invalid or corrupted datafile. '{user_data.get("expected_date")}' is not a valid date.", style="red")
+        sys.exit(1)
+
     final_date = datetime.combine(user_data.get("expected_date"), datetime.min.time())
 
     if not config.has_section("general"):
-        print("Config file missing [general] section")
+        console.print("Error: Config file missing [general] section", style="red")
         sys.exit(1)
 
     
@@ -281,7 +286,7 @@ Before you can see your fate, let me ask you some questions...
     elif mode == "timer-extended":
         run_timer_extened(final_date)
     else:
-        print(f"Error: Invalid option '{mode}' in config. Must be one of 'date', 'timer' or 'timer-extended'.")
+        console.print(f"Error: Invalid option '{mode}' in config. Must be one of 'date', 'timer' or 'timer-extended'.", style="red")
 
 if __name__ == "__main__":
     main()
