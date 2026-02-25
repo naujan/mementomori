@@ -34,6 +34,7 @@ The outputted mode can also be altered using the `-m <mode>` argument.
 
 - [PyYaml](https://pypi.org/project/PyYAML/)
 - [python-dateutil](https://pypi.org/project/python-dateutil/)
+- [rich_](https://pypi.org/project/rich/)
 
 ## Installation
 
